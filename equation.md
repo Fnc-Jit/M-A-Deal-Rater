@@ -9,7 +9,7 @@ This document provides a rigorous, step-by-step mathematical breakdown of the sc
 The core predictive model is an **XGBoost Classifier** trained on historical M&A transactions. For any input feature vector $\mathbf{x}$, the model outputs a raw probability $P_{\text{raw}} \in (0, 1)$ representing the likelihood of deal success.
 
 To perform explainability and expert adjustments mathematically, we map this probability to **log-odds (logit) space**:
-$$Y_{\text{log\_odds}} = \ln\left(\frac{P_{\text{raw}}}{1 - P_{\text{raw}}}\right) \in (-\infty, +\infty)$$
+$$Y_{\text{log-odds}} = \ln\left(\frac{P_{\text{raw}}}{1 - P_{\text{raw}}}\right) \in (-\infty, +\infty)$$
 
 ---
 
@@ -19,7 +19,7 @@ To prevent discrete "step-function" outputs typical of decision trees and ensure
 
 ### A. Gaussian Premium Sweet Spot Penalty
 M&A premiums have a non-linear relationship with success: too low (e.g., $<15\%$) and target shareholders reject; too high (e.g., $>50\%$) and the acquirer overpays, leading to value destruction. We model this as a smooth Gaussian penalty peaking at the optimal $30\%$ premium:
-$$\text{premium\_adj} = -\lambda_1 \cdot \left( \frac{\text{premium} - 30.0}{\sigma_{\text{premium}}} \right)^2$$
+$$\text{premium-adj} = -\lambda_1 \cdot \left( \frac{\text{premium} - 30.0}{\sigma_{\text{premium}}} \right)^2$$
 
 Where:
 * $\text{premium}$ is the user input in percent ($0\% - 200\%$).
@@ -28,7 +28,7 @@ Where:
 
 ### B. Relative Size Complexity Penalty
 Larger deal values relative to the acquirer's revenue increase integration and execution complexity. We model this as a linear penalty in log-odds space:
-$$\text{size\_adj} = -\lambda_2 \cdot \left( \frac{\text{deal\_value\_billion}}{\text{acquirer\_revenue\_billion}} \right)$$
+$$\text{size-adj} = -\lambda_2 \cdot \left( \frac{\text{deal-value-billion}}{\text{acquirer-revenue-billion}} \right)$$
 
 Where:
 * $\lambda_2 = 0.3$ represents the size penalty scale factor.
@@ -36,7 +36,7 @@ Where:
 
 ### C. Joint Adjusted Log-Odds
 The final adjusted log-odds score $Y_{\text{adjusted}}$ is the sum of the model's raw log-odds and the expert overlays:
-$$Y_{\text{adjusted}} = Y_{\text{log\_odds}} + \text{premium\_adj} + \text{size\_adj}$$
+$$Y_{\text{adjusted}} = Y_{\text{log-odds}} + \text{premium-adj} + \text{size-adj}$$
 
 ---
 
@@ -50,7 +50,7 @@ $$\text{Score} = \sigma(Y_{\text{adjusted}}) \times 100 = \frac{100}{1 + e^{-Y_{
 ## 4. Additive SHAP Integration
 
 The local explanation engine uses **SHAP (SHapley Additive exPlanations)**. Natively, SHAP values are additive in log-odds space. The raw log-odds score is decomposed as:
-$$Y_{\text{log\_odds}} = V_{\text{base}} + \sum_{i=1}^{D} S_i$$
+$$Y_{\text{log-odds}} = V_{\text{base}} + \sum_{i=1}^{D} S_i$$
 
 Where:
 * $V_{\text{base}}$ is the log-odds base value (expected value of the model over the training set).
@@ -58,16 +58,16 @@ Where:
 
 To ensure the explanations are **100% consistent** with our adjusted final score, we inject the expert overlays directly into the SHAP values of their respective features:
 * **Adjusted Premium SHAP**:
-  $$S_{\text{premium}}' = S_{\text{premium}} + \text{premium\_adj}$$
+  $$S_{\text{premium}}' = S_{\text{premium}} + \text{premium-adj}$$
 * **Adjusted Size SHAP**:
-  $$S_{\text{relative\_size}}' = S_{\text{relative\_size}} + \text{size\_adj}$$
+  $$S_{\text{relative-size}}' = S_{\text{relative-size}} + \text{size-adj}$$
 * **All Other Features**:
   $$S_j' = S_j \quad (\forall j \neq \text{premium}, \text{relative\_size})$$
 
 ### Mathematical Proof of Additive Consistency:
-$$V_{\text{base}} + \sum_{i=1}^{D} S_i' = V_{\text{base}} + \sum_{j \neq \text{premium}, \text{size}} S_j + (S_{\text{premium}} + \text{premium\_adj}) + (S_{\text{relative\_size}} + \text{size\_adj})$$
-$$= \left( V_{\text{base}} + \sum_{i=1}^{D} S_i \right) + \text{premium\_adj} + \text{size\_adj}$$
-$$= Y_{\text{log\_odds}} + \text{premium\_adj} + \text{size\_adj} = Y_{\text{adjusted}}$$
+$$V_{\text{base}} + \sum_{i=1}^{D} S_i' = V_{\text{base}} + \sum_{j \neq \text{premium}, \text{size}} S_j + (S_{\text{premium}} + \text{premium-adj}) + (S_{\text{relative-size}} + \text{size-adj})$$
+$$= \left( V_{\text{base}} + \sum_{i=1}^{D} S_i \right) + \text{premium-adj} + \text{size-adj}$$
+$$= Y_{\text{log-odds}} + \text{premium-adj} + \text{size-adj} = Y_{\text{adjusted}}$$
 
 This proves that the adjusted SHAP values are **natively and perfectly additive** with respect to the final adjusted score.
 

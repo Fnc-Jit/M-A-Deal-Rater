@@ -4,7 +4,7 @@ An advanced, machine-learning-driven decision support system designed to evaluat
 
 ---
 
-## 🛠️ Technology Stack & Badges
+## Technology Stack & Badges
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
@@ -16,28 +16,28 @@ An advanced, machine-learning-driven decision support system designed to evaluat
 
 ---
 
-## 🚀 Core Features & Interface
+## Core Features & Interface
 
 The **M&A Deal Rater** provides a premium, responsive interface featuring interactive charts and real-time calculations:
 
-### 📊 E2E Dynamic Deal Scoring
+### E2E Dynamic Deal Scoring
 Score any hypothetical transaction structure and receive a **Deal Quality Score (0–100)**. The form is pre-loaded with over 70 popular M&A stocks and realistic defaults to guide evaluation.
 
-![Deal Scorer](/Users/jit/Documents/M&A%20Deal%20Rater/asset/SCR-20260624-okzf.png)
+![Deal Scorer](asset/SCR-20260624-okzf.png)
 
-### 🔍 Explainable AI (SHAP Waterfall Chart)
+### Explainable AI (SHAP Waterfall Chart)
 Demystify the machine learning model's predictions. The waterfall chart displays the exact positive or negative contribution of each feature (premium, leverage, size, margins, industry flags) to the final score, with perfect mathematical and visual consistency.
 
-![SHAP Waterfall](/Users/jit/Documents/M&A%20Deal%20Rater/asset/SCR-20260624-olbh.png)
+![SHAP Waterfall](asset/SCR-20260624-olbh.png)
 
-### 💼 Historical Comparables & Analytics
+### Historical Comparables & Analytics
 Retrieve the top 5 most similar historical transactions from a live database of 70+ major M&A deals using a dynamic similarity scoring algorithm. The analytics dashboard aggregates sector volumes, historical score distributions, and success rates based on premium brackets.
 
-![Comparable Deals](/Users/jit/Documents/M&A%20Deal%20Rater/asset/SCR-20260624-okyd.png)
+![Comparable Deals](asset/SCR-20260624-okyd.png)
 
 ---
 
-## 📐 The Mathematical & Rating Engine
+## The Mathematical & Rating Engine
 
 The rating engine combines the predictive power of an **XGBoost Classifier** with a custom **log-odds additive overlay** and a **client-side linear rescaler** to ensure 100% mathematical consistency and complete SHAP explainability.
 
@@ -67,22 +67,22 @@ Machine learning models trained on small datasets are prone to step-function pre
 
 1. **Gaussian Premium Sweet Spot Penalty**:
    M&A premiums have a non-linear relationship with success: too low and target shareholders reject; too high and the acquirer overpays. We model this as a smooth Gaussian penalty peaking at the optimal 30% premium:
-   $$\text{premium\_adj} = -0.6 \times \left( \frac{\text{premium} - 30.0}{15.0} \right)^2$$
+   $$\text{premium-adj} = -0.6 \times \left( \frac{\text{premium} - 30.0}{15.0} \right)^2$$
 
 2. **Relative Size Complexity Penalty**:
    Larger deal values relative to the acquirer's size increase integration and execution complexity. We model this as a linear penalty in log-odds:
-   $$\text{size\_adj} = -0.3 \times \left( \frac{\text{deal\_value\_billion}}{\text{acquirer\_revenue\_billion}} \right)$$
+   $$\text{size-adj} = -0.3 \times \left( \frac{\text{deal-value-billion}}{\text{acquirer-revenue-billion}} \right)$$
 
-By adding these adjustments directly to the raw log-odds output ($Y_{\text{log\_odds}}$) of the XGBoost model:
-$$Y_{\text{adjusted}} = Y_{\text{log\_odds}} + \text{premium\_adj} + \text{size\_adj}$$
+By adding these adjustments directly to the raw log-odds output ($Y_{\text{log-odds}}$) of the XGBoost model:
+$$Y_{\text{adjusted}} = Y_{\text{log-odds}} + \text{premium-adj} + \text{size-adj}$$
 
 The final adjusted score is converted back to probability space:
 $$\text{Score} = \sigma(Y_{\text{adjusted}}) \times 100 = \frac{1}{1 + e^{-Y_{\text{adjusted}}}} \times 100$$
 
 ### B. 100% Mathematically Consistent SHAP Attributions
 Because the adjustments are added in log-odds space, they are **natively and perfectly additive**. In the explanation layer, the adjustments are added directly to the raw SHAP values ($S_i$) of the respective features:
-$$S_{\text{premium}}' = S_{\text{premium}} + \text{premium\_adj}$$
-$$S_{\text{relative\_size}}' = S_{\text{relative\_size}} + \text{size\_adj}$$
+$$S_{\text{premium}}' = S_{\text{premium}} + \text{premium-adj}$$
+$$S_{\text{relative-size}}' = S_{\text{relative-size}} + \text{size-adj}$$
 
 This guarantees that the sum of the adjusted SHAP values plus the base value ($V_{\text{base}}$) is **exactly** equal to the adjusted log-odds score:
 $$V_{\text{base}} + \sum S_i' = Y_{\text{adjusted}}$$
@@ -106,23 +106,23 @@ Since SHAP values are additive in log-odds space, rendering them in probability 
 
 ---
 
-## 🧪 Model Sensitivity Analysis (Verification Grid)
+## Model Sensitivity Analysis (Verification Grid)
 
 To verify the model's sensitivity and realistic behavior, we ran a verification grid for **AAPL acquiring NVDA** across various premium levels and transaction sizes. The results demonstrate the smooth, non-linear premium scaling and size complexity adjustments:
 
 | Metric | Input Value | Deal Quality Score | Interpretation |
 | :--- | :---: | :---: | :--- |
-| **Premium Sensitivity**<br>*(Deal value fixed at $5B)* | 5% | **13.7** | 🔴 Low premium (Target board/shareholders will reject) |
-| | 12% | **13.7** | 🔴 Low premium (Target board/shareholders will reject) |
-| | 25% | **89.4** | 🟢 Healthy premium (Optimal sweet spot for approval) |
-| | 35% | **89.4** | 🟢 Healthy premium (Optimal sweet spot for approval) |
-| | 52% | **16.1** | 🔴 Excessive premium (Value destruction/regulatory risk) |
-| | 60% | **16.1** | 🔴 Excessive premium (Value destruction/regulatory risk) |
-| **Size Sensitivity**<br>*(Premium fixed at 30%)* | $1B to $100B | **89.4** | 🟢 Consistently strong (For a mega-cap like AAPL, deals of all scales are healthy if structured optimally) |
+| **Premium Sensitivity**<br>*(Deal value fixed at $5B)* | 5% | **13.7** | Low premium (Target board/shareholders will reject) |
+| | 12% | **13.7** | Low premium (Target board/shareholders will reject) |
+| | 25% | **89.4** | Healthy premium (Optimal sweet spot for approval) |
+| | 35% | **89.4** | Healthy premium (Optimal sweet spot for approval) |
+| | 52% | **16.1** | Excessive premium (Value destruction/regulatory risk) |
+| | 60% | **16.1** | Excessive premium (Value destruction/regulatory risk) |
+| **Size Sensitivity**<br>*(Premium fixed at 30%)* | $1B to $100B | **89.4** | Consistently strong (For a mega-cap like AAPL, deals of all scales are healthy if structured optimally) |
 
 ---
 
-## 📊 Historical Dataset & Outcome Methodology
+## Historical Dataset & Outcome Methodology
 
 The project includes a compiled database of **70+ prominent M&A transactions** (2018–2024). A transaction's outcome label is quantitatively constructed based on two criteria:
 1. **Completion**: The deal was legally closed and completed (rather than terminated or blocked).
@@ -132,7 +132,7 @@ The project includes a compiled database of **70+ prominent M&A transactions** (
 
 ---
 
-## ⚡ High-Performance Local Caching
+## High-Performance Local Caching
 
 To eliminate network latency and prevent external API rate limiting, the backend incorporates a local JSON file caching layer for all Yahoo Finance (`yfinance`) fetches:
 * Re-evaluating a cached ticker runs in **under 10 milliseconds** locally (compared to 6+ seconds over the network).
@@ -140,7 +140,7 @@ To eliminate network latency and prevent external API rate limiting, the backend
 
 ---
 
-## 🏆 Accomplishments & Technical Solutions
+## Accomplishments & Technical Solutions
 
 ### A. High-Fidelity Dataset Compilation
 * **The Problem**: During initial setup, the FMP API key failed, causing the compiler to fall back to coarse mock constants ($10B revenue, 25% margin, 2.0 leverage) for all 70+ historical deals. The model learned that these features were constant and ignored them, leaving it insensitive to variations.
@@ -160,7 +160,7 @@ To eliminate network latency and prevent external API rate limiting, the backend
 
 ---
 
-## 💻 Local Execution Guide
+## Local Execution Guide
 
 ### 1. Start the Backend Server (FastAPI)
 Navigate to the `backend/` folder, activate the virtual environment, and start the server:
